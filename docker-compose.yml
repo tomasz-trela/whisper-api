@@ -2,8 +2,6 @@ version: '3.8'
 
 services:
   whisper-api:
-    ports:
-      - "8001:8000"
     build:
       context: .
       dockerfile: Dockerfile 
