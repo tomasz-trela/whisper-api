@@ -4,13 +4,11 @@ services:
   whisper-api:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: yourusername/your-whisper-app
+      dockerfile: Dockerfile 
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+
     volumes:
-      - whisper_cache:/root/.cache/whisper 
+      - whisper_cache:/root/.cache/whisper
     environment:
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
       WHISPER_DEVICE: "cpu"
