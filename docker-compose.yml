@@ -15,6 +15,12 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
       WHISPER_DEVICE: "cpu"
 
+  cloudflare:
+    image: 'cloudflare/cloudflared:latest'
+    restart: unless-stopped
+    command: 'tunnel --no-autoupdate run'
+    environment:
+      TUNNEL_TOKEN: '${TUNNEL_TOKEN}'
 
 volumes:
   whisper_cache: 
