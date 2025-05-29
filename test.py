@@ -1,7 +1,7 @@
 from pprint import pprint
 import requests
 
-url = "http://localhost:8000/transcribe"
+url = "https://whisper.tomasz-trela.dev/transcribe"
 
 file_path = "/Users/tt/Downloads/sample.mp3" 
 

@@ -10,6 +10,7 @@ services:
     volumes:
       - whisper_cache:/root/.cache/whisper
     environment:
+      MY_API_KEY: ${MY_API_KEY}
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
       WHISPER_DEVICE: "cpu"
 
