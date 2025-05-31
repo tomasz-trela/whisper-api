@@ -2,8 +2,7 @@ from fastapi import FastAPI
 import whisper
 import uvicorn
 
-from config import WHISPER_DEVICE_NAME, WHISPER_MODEL_NAME
-
+from src.config import WHISPER_DEVICE_NAME, WHISPER_MODEL_NAME
 
 app = FastAPI()
 
