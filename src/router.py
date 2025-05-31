@@ -1,10 +1,15 @@
 from fastapi import File, UploadFile, HTTPException, APIRouter
 import tempfile
 import os
-from config import WHISPER_DEVICE_NAME
-from main import whisper_model, app
+import whisper
+from src.config import WHISPER_DEVICE_NAME, WHISPER_MODEL_NAME
 
 router = APIRouter()
+
+print(f"Loading Whisper model: {WHISPER_MODEL_NAME} on device: {WHISPER_DEVICE_NAME}")
+whisper_model = whisper.load_model(WHISPER_MODEL_NAME, device=WHISPER_DEVICE_NAME)
+print("Whisper model loaded.")
+
 
 @router.post("/transcribe")
 async def transcribe_audio(audio_file: UploadFile = File(...)):

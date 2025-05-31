@@ -1,7 +1,6 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from config import API_KEY
-from main import app
+from src.config import API_KEY
 from starlette.middleware.base import BaseHTTPMiddleware
 
 
