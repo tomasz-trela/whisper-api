@@ -6,22 +6,14 @@ services:
       context: .
       dockerfile: Dockerfile 
     restart: unless-stopped
+    runtime: nvidia
 
     volumes:
       - whisper_cache:/root/.cache/whisper
     environment:
       MY_API_KEY: ${MY_API_KEY}
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
-      WHISPER_DEVICE: "cpu"
-
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
+      WHISPER_DEVICE: "cuda"
 
   cloudflare:
     image: 'cloudflare/cloudflared:latest'
