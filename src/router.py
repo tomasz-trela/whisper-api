@@ -1,4 +1,4 @@
-from fastapi import File, UploadFile, HTTPException, APIRouter
+from fastapi import File, Query, UploadFile, HTTPException, APIRouter
 import tempfile
 import os
 import whisper
@@ -12,14 +12,22 @@ print("Whisper model loaded.")
 
 
 @router.post("/transcribe")
-async def transcribe_audio(audio_file: UploadFile = File(...)):
+async def transcribe_audio(
+    audio_file: UploadFile = File(...),
+    language: str | None = Query(None, description="Language code, e.g. 'pl' for Polish, 'en' for English")
+):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
         tmp.write(await audio_file.read())
         tmp_path = tmp.name
 
     try:
         fp16_setting = True if WHISPER_DEVICE_NAME == "cuda" else False
-        result = whisper_model.transcribe(tmp_path, fp16=fp16_setting)
+
+        if language:
+            result = whisper_model.transcribe(tmp_path, fp16=fp16_setting, language=language)
+        else:
+            result = whisper_model.transcribe(tmp_path, fp16=fp16_setting)
+
     except Exception as e:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
