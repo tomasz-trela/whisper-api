@@ -1,11 +1,12 @@
-from fastapi import File, UploadFile, HTTPException
+from fastapi import File, UploadFile, HTTPException, APIRouter
 import tempfile
 import os
 from config import WHISPER_DEVICE_NAME
 from main import whisper_model, app
 
+router = APIRouter()
 
-@app.post("/transcribe")
+@router.post("/transcribe")
 async def transcribe_audio(audio_file: UploadFile = File(...)):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
         tmp.write(await audio_file.read())
@@ -24,6 +25,6 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
 
     return {"text": result["text"], "segments": result["segments"]}
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     return {"status": "ok", "model_loaded": whisper_model is not None}
