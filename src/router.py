@@ -1,7 +1,6 @@
 from fastapi import File, Query, UploadFile, HTTPException, APIRouter
-from sklearn import pipeline
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from src.config import WHISPER_DEVICE_NAME, WHISPER_MODEL_NAME
 
 router = APIRouter()
