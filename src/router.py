@@ -1,6 +1,4 @@
 from fastapi import File, Query, UploadFile, HTTPException, APIRouter
-import tempfile
-import os
 from sklearn import pipeline
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
