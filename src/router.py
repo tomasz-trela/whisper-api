@@ -1,14 +1,45 @@
 from fastapi import File, Query, UploadFile, HTTPException, APIRouter
 import tempfile
 import os
-import whisper
+from sklearn import pipeline
+import torch
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 from src.config import WHISPER_DEVICE_NAME, WHISPER_MODEL_NAME
 
 router = APIRouter()
 
-print(f"Loading Whisper model: {WHISPER_MODEL_NAME} on device: {WHISPER_DEVICE_NAME}")
-whisper_model = whisper.load_model(WHISPER_MODEL_NAME, device=WHISPER_DEVICE_NAME)
-print("Whisper model loaded.")
+model_id = WHISPER_MODEL_NAME  
+device = WHISPER_DEVICE_NAME  
+
+print(f"Loading Hugging Face model: {model_id} on device: {device}")
+
+torch_dtype = torch.float16 if "cuda" in device else torch.float32
+
+try:
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    model.to(device)
+
+
+    processor = AutoProcessor.from_pretrained(model_id)
+
+    transcription_pipeline = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        max_new_tokens=128,
+        chunk_length_s=30, 
+        batch_size=16,     
+        torch_dtype=torch_dtype,
+        device=device,
+    )
+    print("Hugging Face pipeline loaded successfully.")
+
+except Exception as e:
+    print(f"Error loading model or pipeline: {e}")
+    transcription_pipeline = None
 
 
 @router.post("/transcribe")
@@ -16,28 +47,26 @@ async def transcribe_audio(
     audio_file: UploadFile = File(...),
     language: str | None = Query(None, description="Language code, e.g. 'pl' for Polish, 'en' for English")
 ):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
-        tmp.write(await audio_file.read())
-        tmp_path = tmp.name
+    if transcription_pipeline is None:
+        raise HTTPException(status_code=503, detail="Transcription model is not available.")
+
+    audio_bytes = await audio_file.read()
 
     try:
-        fp16_setting = True if WHISPER_DEVICE_NAME == "cuda" else False
-
+        generate_kwargs = {}
         if language:
-            result = whisper_model.transcribe(tmp_path, fp16=fp16_setting, language=language)
-        else:
-            result = whisper_model.transcribe(tmp_path, fp16=fp16_setting)
+            generate_kwargs["language"] = language
+            generate_kwargs["task"] = "transcribe"
 
+        result = transcription_pipeline(audio_bytes, generate_kwargs=generate_kwargs, return_timestamps=True)
+        
     except Exception as e:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
         raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
 
-    return {"text": result["text"], "segments": result["segments"]}
+    segments = result.get("chunks", [])
+    
+    return {"text": result["text"].strip(), "segments": segments}
 
 @router.get("/health")
 async def health_check():
-    return {"status": "ok", "model_loaded": whisper_model is not None}
+    return {"status": "ok", "model_loaded": transcription_pipeline is not None}

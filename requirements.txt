@@ -1,5 +1,6 @@
+transformers
+torch
 fastapi
-uvicorn
-torch              
-openai-whisper
+uvicorn[standard]
 python-multipart
+datasets
